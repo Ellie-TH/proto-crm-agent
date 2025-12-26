@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CRM AI Agent Prototype</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">AI</div>
+      <div>
+        <div class="title">고객관리 AI Agent</div>
+        <div class="subtitle">백엔드 없는 컨셉 프로토타입 (localStorage)</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button id="btnSeed" class="ghost">샘플데이터</button>
+      <button id="btnExport" class="ghost">내보내기</button>
+      <label class="ghost file">
+        가져오기
+        <input id="fileImport" type="file" accept="application/json" hidden />
+      </label>
+      <button id="btnReset" class="danger">초기화</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- LEFT: Board / List -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>고객 보드</h2>
+        <div class="row">
+          <input id="search" class="input" placeholder="이름/회사/태그 검색" />
+          <select id="statusFilter" class="input">
+            <option value="ALL">상태: 전체</option>
+            <option value="LEAD">LEAD</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="RISK">RISK</option>
+            <option value="CLOSED">CLOSED</option>
+          </select>
+          <button id="btnAdd" class="primary">+ 고객 추가</button>
+        </div>
+      </div>
+
+      <div class="columns" id="board">
+        <!-- columns injected -->
+      </div>
+    </section>
+
+    <!-- RIGHT: Detail + Agent -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>고객 상세 & Agent</h2>
+        <div class="hint">고객을 클릭하면 상세가 열립니다. (데모: 룰 기반 응답)</div>
+      </div>
+
+      <div class="split">
+        <!-- Customer detail -->
+        <div class="card" id="detailCard">
+          <div class="empty" id="emptyDetail">
+            왼쪽에서 고객을 선택하세요.
+          </div>
+
+          <form id="detailForm" class="hidden" autocomplete="off">
+            <div class="grid2">
+              <div>
+                <label>이름</label>
+                <input id="dName" class="input" required />
+              </div>
+              <div>
+                <label>회사</label>
+                <input id="dCompany" class="input" />
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div>
+                <label>담당자(내부)</label>
+                <input id="dOwner" class="input" placeholder="예: RM 김태희" />
+              </div>
+              <div>
+                <label>상태</label>
+                <select id="dStatus" class="input">
+                  <option value="LEAD">LEAD</option>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="RISK">RISK</option>
+                  <option value="CLOSED">CLOSED</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div>
+                <label>최근 접촉일</label>
+                <input id="dLastContact" class="input" type="date" />
+              </div>
+              <div>
+                <label>다음 액션일</label>
+                <input id="dNextAction" class="input" type="date" />
+              </div>
+            </div>
+
+            <div>
+              <label>태그 (쉼표로 구분)</label>
+              <input id="dTags" class="input" placeholder="예: 제조업,대출상담,고위험" />
+            </div>
+
+            <div>
+              <label>메모</label>
+              <textarea id="dNotes" class="input textarea" rows="5" placeholder="상담 요약/이슈/요청사항"></textarea>
+            </div>
+
+            <div class="row right">
+              <button id="btnDelete" type="button" class="danger ghost">삭제</button>
+              <button id="btnSave" type="submit" class="primary">저장</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Agent chat -->
+        <div class="card agent">
+          <div class="agent-head">
+            <div class="agent-title">AI Agent</div>
+            <div class="agent-sub">예: “이 고객 요약해줘”, “다음 액션 제안”, “리스크 포인트?”</div>
+          </div>
+
+          <div id="chat" class="chat"></div>
+
+          <div class="chatbox">
+            <input id="prompt" class="input" placeholder="메시지를 입력하세요..." />
+            <button id="btnSend" class="primary">전송</button>
+          </div>
+
+          <div class="agent-actions">
+            <button class="chip" data-q="이 고객 한 줄 요약">한줄요약</button>
+            <button class="chip" data-q="다음 액션 3개 추천">다음액션</button>
+            <button class="chip" data-q="리스크/이상징후 체크">리스크체크</button>
+            <button class="chip" data-q="상담 스크립트 만들어줘">상담스크립트</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <dialog id="modal">
+    <form method="dialog" class="modal">
+      <h3>고객 추가</h3>
+      <div class="grid2">
+        <div>
+          <label>이름</label>
+          <input id="mName" class="input" required />
+        </div>
+        <div>
+          <label>회사</label>
+          <input id="mCompany" class="input" />
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label>담당자</label>
+          <input id="mOwner" class="input" placeholder="예: RM 김태희" />
+        </div>
+        <div>
+          <label>상태</label>
+          <select id="mStatus" class="input">
+            <option value="LEAD">LEAD</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="RISK">RISK</option>
+            <option value="CLOSED">CLOSED</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label>태그</label>
+        <input id="mTags" class="input" placeholder="예: 제조업,대출상담" />
+      </div>
+      <div class="row right">
+        <button class="ghost">취소</button>
+        <button id="mCreate" class="primary" value="default">추가</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="./app.js"></script>
+</body>
+</html>
+
